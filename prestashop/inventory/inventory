@@ -1,0 +1,10 @@
+[frontend]
+52.55.201.66
+
+[backend]
+54.211.180.92
+
+[all:vars]
+ansible_user=ubuntu
+ansible_ssh_private_key_file=/home/josejuan/Lab/claves-ssh/vockey.pem
+ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
