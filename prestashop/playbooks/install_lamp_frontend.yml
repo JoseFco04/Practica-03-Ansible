@@ -20,16 +20,7 @@
           - php
           - php-mysql
           - libapache2-mod-php
-          - php-bcmath
-          - php-curl
-          - php-gd
-          - php-imagick
-          - php-intl
-          - php-memcached
-          - php-mbstring
-          - php-dom
-          - php-zip
-          - php-cli
+          
         state: present
 
     - name: Modificamos el valor max_input_vars de PHP

@@ -29,15 +29,15 @@
 
     - name: Crear una base de datos
       mysql_db:
-        name: "{{ db.name }}"
+        name: "{{ wordpress.WORDPRESS_DB_NAME }}"
         state: present
         login_unix_socket: /var/run/mysqld/mysqld.sock 
 
     - name: Crear el usuario de la base de datos
       mysql_user:         
-        name: "{{ db.user }}"
-        password: "{{ db.password }}"
-        priv: "{{ db.name }}.*:ALL"
+        name: "{{ wordpress.WORDPRESS_DB_USER }}"
+        password: "{{ wordpress.WORDPRESS_DB_PASSWORD }}"
+        priv: "{{ wordpress.WORDPRESS_DB_NAME }}.*:ALL"
         host: "%"
         state: present
         login_unix_socket: /var/run/mysqld/mysqld.sock 

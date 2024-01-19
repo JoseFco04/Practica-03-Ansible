@@ -7,30 +7,68 @@
     - ../vars/variables.yml
 
   tasks:
+    - name: Borrar instalciones previas de wordpress wp-cli
+      file:
+        path: /tmp/wp-cli.phar
 
-    - name: Descargar el código fuente de PrestaShop
+    - name: Descargar el código fuente de Wordpress
       get_url:
-        url: https://github.com/PrestaShop/PrestaShop/releases/download/8.0.1/prestashop_8.0.1.zip
+        url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
         dest: /tmp
+        mode: 0755 
+  
+    - name : Borramos instalaciones previas de wordpress
+      shell: rm -rf /var/www/html/*
+    
+    - name : Descargamos el código fuente de worpress en /var/www/html
+      command: wp core download --locale=es_ES --path=/var/www/html --allow-root         
+    
+    - name: Instalar Wordpress desde CLI
+      command:
+        wp config create \
+        --dbname="{{ wordpress.WORDPRESS_DB_NAME }}" \
+        --dbuser="{{ wordpress.WORDPRESS_DB_USER }}" \
+        --dbpass="{{ wordpress.WORDPRESS_DB_PASSWORD }}" \
+        --path=/var/www/html \
+        --allow-root
+      args:
+        chdir: /var/www/html/install
+      
+    - name: Instalar Wordpress desde CLI
+      command:
+        wp core install \
+        --url="{{ wordpress.CB_DOMAIN }}" \
+        --title="{{ wordpress.WORDPRESS_TITLE }}" \
+        --admin_user="{{ wordpress.WORDPRESS_ADMIN_USER }}" \
+        --admin_password="{{ wordpress.WORDPRESS_ADMIN_PASS }}" \
+        --admin_email="{{ wordpress.WORDPRESS_ADMIN_EMAIL }}" \
+        --path=/var/www/html \
+        --allow-root
+      args:
+        chdir: /var/www/html/install
+    - name: Actualizamos los plugins de wordpress
+      command: wp core update --path=/var/www/html --allow-root
+
+    - name: Actualizamos los temas 
+      command: wp theme update --all --path=/var/www/html --allow-root
+
+    - name: Instalamos un tema 
+      command: wp theme install "{{ wordpress.TEMA }}" --activate --path=/var/www/html --allow-root
+    
+    - name: Actualizamos los plugins de wordpress
+      command: wp plugin update --all --path=/var/www/html --allow-root
+
+    - name: Instalamos un plugin 
+      command: wp plugin install "{{ wordpress.PLUGIN }}" --activate --path=/var/www/html --allow-root
+
+    - name: Instalamos otro plugin
+      command: wp plugin install "{{ wordpress.PLUGIN2 }}" --activate --path=/var/www/html --allow-root
+    
+    - name: Copiamos el archivo .htaccess
+      template:
+        src: ../templates/.htaccess
+        dest: /var/www/html
         mode: 0755
-
-    - name: Instalar unzip
-      apt: 
-        name: unzip
-        state: present
-
-    - name: Descomprimir el paquete de PrestaShop
-      unarchive:
-        src: /tmp/prestashop_8.0.1.zip
-        dest: /tmp/
-        remote_src: true
-        
-    - name: Descomprimir el código fuente de PrestaShop
-      unarchive:
-        src: /tmp/prestashop.zip
-        dest: /var/www/html/
-        remote_src: yes
-
     - name: Modificamos los permisos del directorio /var/www/html
       file:
         path: /var/www/html
@@ -38,27 +76,3 @@
         group: www-data
         recurse: yes
         mode: 0755
-        
-    - name: Instalar PrestaShop desde PHP CLI
-      command:
-        php index_cli.php \
-        --language={{ prestashop.language }} \
-        --name={{ prestashop.name }} \
-        --country={{ prestashop.country }} \
-        --ssl={{ prestashop.ssl }} \
-        --firstname={{ prestashop.firstname }} \
-        --lastname={{ prestashop.lastname }} \
-        --email={{ prestashop.email }} \
-        --password={{ prestashop.password }} \
-        --db_server={{ prestashop.db_server }} \
-        --db_name={{ db.name }} \
-        --db_user={{ db.user }} \
-        --db_password={{ db.password }} \
-        --domain={{ certbot.domain }}
-      args:
-        chdir: /var/www/html/install
-      
-    - name: Eliminar el directorio de instalación
-      file:
-        path: /var/www/html/install
-        state: absent
