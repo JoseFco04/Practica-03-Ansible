@@ -1,6 +1,7 @@
 installation_path: /var/www/html/
 
 wordpress:
+    IP_CLIENTE_PRIVADA: 172.31.87.224
     WORDPRESS_DB_NAME: wordpress
     WORDPRESS_DB_USER: josefco
     WORDPRESS_DB_PASSWORD: 1234
