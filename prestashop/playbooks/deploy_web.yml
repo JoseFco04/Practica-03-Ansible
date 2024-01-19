@@ -10,11 +10,12 @@
     - name: Borrar instalciones previas de wordpress wp-cli
       file:
         path: /tmp/wp-cli.phar
+        state: absent
 
     - name: Descargar el código fuente de Wordpress
       get_url:
         url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-        dest: /tmp
+        dest: /usr/local/bin/wp
         mode: 0755 
   
     - name : Borramos instalaciones previas de wordpress
@@ -31,8 +32,6 @@
         --dbpass="{{ wordpress.WORDPRESS_DB_PASSWORD }}" \
         --path=/var/www/html \
         --allow-root
-      args:
-        chdir: /var/www/html/install
       
     - name: Instalar Wordpress desde CLI
       command:
@@ -44,8 +43,7 @@
         --admin_email="{{ wordpress.WORDPRESS_ADMIN_EMAIL }}" \
         --path=/var/www/html \
         --allow-root
-      args:
-        chdir: /var/www/html/install
+
     - name: Actualizamos los plugins de wordpress
       command: wp core update --path=/var/www/html --allow-root
 
@@ -63,7 +61,13 @@
 
     - name: Instalamos otro plugin
       command: wp plugin install "{{ wordpress.PLUGIN2 }}" --activate --path=/var/www/html --allow-root
-    
+   
+    - name: Configuramos la redirección del acceso
+      command: wp rewrite structure '/%postname%/' --path=/var/www/html --allow-root
+
+    - name: Configuramos el plugin del acceso por la ruta
+      command: wp option update whl_page {{ wordpress.PLUGIN3 }} --path=/var/www/html --allow-root
+   
     - name: Copiamos el archivo .htaccess
       template:
         src: ../templates/.htaccess

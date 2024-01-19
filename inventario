@@ -1,8 +1,0 @@
-[aws]
-54.211.180.92
-52.55.201.66
-
-[all:vars]
-ansible-user=ubuntu
-ansible_ssh_private_key_file=/home/ubuntu/Practica-03/labuser.pem
-ansible_ssh_common_args=ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'

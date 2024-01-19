@@ -1,21 +1,17 @@
-installation_path: /var/www/html/
-
 wordpress:
-    IP_CLIENTE_PRIVADA: 172.31.87.224
+    IP_CLIENTE_PRIVADA: 172.31.88.44
     WORDPRESS_DB_NAME: wordpress
     WORDPRESS_DB_USER: josefco
     WORDPRESS_DB_PASSWORD: 1234
-    WORDPRESS_DB_HOST: localhost
+    WORDPRESS_DB_HOST: 172.31.88.44
     WORDPRESS_TITLE: "Sitio web de IAW Jose"
     WORDPRESS_ADMIN_USER: admin 
     WORDPRESS_ADMIN_PASS: admin 
     WORDPRESS_ADMIN_EMAIL: josefco@iaw.com
-    CB_DOMAIN: practica-0105.ddns.net
+    CB_DOMAIN: ansible-practica.ddns.net
     TEMA: sydney
     PLUGIN: bbpress
     PLUGIN2: wps-hide-login
+    PLUGIN3: Acceso
+    CB_MAIL: josefco@iaw.com
 
-phpmyadmin:
-    user: pma_user
-    password: pma_password
-    db_name: db_name
