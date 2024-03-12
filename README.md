@@ -335,3 +335,64 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
         state: present
         login_unix_socket: /var/run/mysqld/mysqld.sock
 ~~~
+#### A la tercera carpeta la hemos llamado templates y ahi hemos guardado los dos archivos de configuración para la web.
+##### El primero es el .htaccess que lo debemos tener así
+~~~
+  # BEGIN WordPress
+  <IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.php$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.php [L]
+  </IfModule>
+  # END WordPress
+~~~
+##### Y el segundo archivo que tenemos es el 000-default.conf que se debería de ver así:
+~~~
+ServerSignature Off
+ServerTokens Prod
+
+<VirtualHost *:80>
+        DocumentRoot /var/www/html
+        DirectoryIndex index.php index.html
+
+        ErrorLog ${APACHE_LOG_DIR}/error.log
+        CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+        <Directory "/var/www/html">
+            AllowOverride All
+        </Directory>
+</VirtualHost>
+~~~
+#### Y la cuarta carpeta la vamos a llamar vars que es donde vamos a guardar nuestro archivo de variables
+##### El archivo variables.yml se debería ver así:
+~~~
+wordpress:
+    IP_CLIENTE_PRIVADA: 172.31.89.193
+    WORDPRESS_DB_NAME: wordpress
+    WORDPRESS_DB_USER: josefco
+    WORDPRESS_DB_PASSWORD: 1234
+    WORDPRESS_DB_HOST: 172.31.89.193
+    WORDPRESS_TITLE: "Sitio web de IAW Jose"
+    WORDPRESS_ADMIN_USER: admin 
+    WORDPRESS_ADMIN_PASS: admin 
+    WORDPRESS_ADMIN_EMAIL: josefco@iaw.com
+    CB_DOMAIN: ansible-practica.ddns.net
+    TEMA: sydney
+    PLUGIN: bbpress
+    PLUGIN2: wps-hide-login
+    PLUGIN3: Acceso
+    CB_MAIL: josefco@iaw.com
+~~~
+#### Una vez hecho todos los archivos en el archivo main.yml que es el que vamos a ejecutar se van a guardar con el orden que queremos que se ejecuten los scripts de la carpeta playbooks
+~~~
+---
+- import_playbook: playbooks/install_lamp_frontend.yml
+- import_playbook: playbooks/install_lamp_backend.yml
+- import_playbook: playbooks/install_tools.yml
+- import_playbook: playbooks/config_https.yml
+- import_playbook: playbooks/deploy_web.yml
+~~~
+### Una vez lo ejecutamos ya tendríamos nuestrol wordpress funcionando
