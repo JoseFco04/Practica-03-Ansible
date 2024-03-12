@@ -136,7 +136,7 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
         mode: 0755
 ~~~
 
-#### El tercer script que tenemos es para instalar la pila LAMP del backend y se nos debería quedar así:
+##### El tercer script que tenemos es para instalar la pila LAMP del backend y se nos debería quedar así:
 ~~~
 ---
 - name: Playbook para instalar la pila LAMP en el Backend
@@ -192,4 +192,146 @@ ansible_ssh_common_args='-o StrictHostKeyChecking=accept-new'
       service:
         name: mysql
         state: restarted
+~~~
+##### En el cuarto script vamos a tener el que instala la pila lamp del frontend, se nos debe ver así:
+~~~
+---
+- name: Playbook para instalar la pila LAMP en el FrontEnd
+  hosts: frontend
+  become: yes
+
+  tasks:
+
+    - name: Actualizar los repositorios
+      apt:
+        update_cache: yes
+
+    - name: Instalar el servidor web Apache
+      apt:
+        name: apache2
+        state: present
+
+    - name: Instalar PHP y los módulos necesarios
+      apt: 
+        name:
+          - php
+          - php-mysql
+          - libapache2-mod-php
+          
+        state: present
+
+    - name: Modificamos el valor max_input_vars de PHP
+      replace: 
+        path: /etc/php/8.1/apache2/php.ini
+        regexp: ;max_input_vars = 1000
+        replace: max_input_vars = 5000
+
+    - name: Modificamos el valor de memory_limit de PHP
+      replace: 
+        path: /etc/php/8.1/apache2/php.ini
+        regexp: memory_limit = 128M
+        replace: memory_limit = 256M
+
+    - name: Modificamos el valor de post_max_size de PHP
+      replace: 
+        path: /etc/php/8.1/apache2/php.ini
+        regexp: post_max_size = 8M
+        replace: post_max_size = 128M
+
+    - name: Modificamos el valor de upload_max_filesize de PHP
+      replace:
+        path: /etc/php/8.1/apache2/php.ini
+        regexp: upload_max_filesize = 2M
+        replace: upload_max_filesize = 128M
+
+    - name: Copiar el archivo de configuración de Apache
+      template:
+        src: ../templates/000-default.conf
+        dest: /etc/apache2/sites-available/
+        mode: 0755
+
+    - name: Habilitar el módulo rewrite de Apache
+      apache2_module:
+        name: rewrite
+        state: present
+
+    - name: Reiniciar el servidor web Apache
+      service:
+        name: apache2
+        state: restarted
+~~~
+##### Y en el último script tenemos el .yml para instalar herramientas adicionales para el servidor, se nos debe ver así:
+~~~
+---
+- name: Playbook para instalar herramientas adicionales
+  hosts: aws
+  become: yes
+
+  vars_files:
+    - ../vars/variables.yml
+
+  tasks:
+
+    - name: Descargar phpMyAdmin
+      get_url:
+        url: https://files.phpmyadmin.net/phpMyAdmin/5.2.0/phpMyAdmin-5.2.0-all-languages.zip
+        dest: /tmp/phpMyAdmin-5.2.0-all-languages.zip
+
+    - name: Instalar unzip
+      apt:
+        name: unzip
+        state: present
+
+    - name: Descomprimir phpMyAdmin
+      unarchive:
+        src: /tmp/phpMyAdmin-5.2.0-all-languages.zip
+        dest: /tmp/
+        remote_src: yes
+
+    - name: Copiar phpMyAdmin
+      copy:
+        src: /tmp/phpMyAdmin-5.2.0-all-languages/
+        dest: /var/www/html/phpmyadmin
+        remote_src: yes
+        mode: 0755
+
+    - name: Cambiar el propietario y el grupo de phpMyAdmin
+      file:
+        path: /var/www/html/phpmyadmin
+        state: directory
+        owner: www-data
+        group: www-data
+        recurse: yes
+
+    # Para utilizar el módulo mysql_db necesitamos tener instalado el paquete python3-mysqldb.
+    - name: Instalar pip3
+      apt:
+        name: python3-pip
+        state: present
+
+    - name: Instalar PyMySQL
+      pip:
+        name: pymysql
+        state: present
+
+    - name: Crear la base de datos para phpMyAdmin
+      mysql_db:
+        name: "{{ phpmyadmin.db_name }}"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Importar la base de datos de phpMyAdmin
+      mysql_db:
+        name: "{{ phpmyadmin.db_name }}"
+        state: import
+        target: /var/www/html/phpmyadmin/sql/create_tables.sql
+        login_unix_socket: /var/run/mysqld/mysqld.sock
+
+    - name: Crear el usuario de phpMyAdmin
+      mysql_user:
+        name: "{{ phpmyadmin.user }}"
+        password: "{{ phpmyadmin.password }}"
+        priv: "{{ phpmyadmin.db_name }}.*:ALL"
+        state: present
+        login_unix_socket: /var/run/mysqld/mysqld.sock
 ~~~
